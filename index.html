@@ -25,11 +25,11 @@
     .h{font-weight:bold;color:var(--s)}
     .t{background:#ecfdf5;font-weight:bold}
     .o{font-size:.85rem;color:var(--g);margin-top:1rem}
-    kbd{background:#1f2937;color:#fff;padding:2px 6px;border-radius:4px;font-size:.8rem}
     @media(max-width:600px){.n{padding:1rem}td,th{padding:.5rem}}
   </style>
 </head>
 <body>
+
 <div class="c">
   <header><h1>Ultra Run 90K Calculator</h1><div class="i">by ARJ (21Runners Qatar)</div></header>
   <div class="n">
@@ -37,24 +37,12 @@
     <div class="g"><label>Pelari & Pace (mm:ss)</label><div id="r"></div></div>
     <button onclick="_()">Hitung Estimasi Waktu</button>
     <div class="o">Contoh: <code>5:30</code></div>
-    <div class="o" style="color:#dc2626;font-weight:600">Password lihat kode: tanya ARJ</div>
+    <div class="o" style="color:#dc2626;font-weight:600">Kode sumber: tanya langsung ARJ 21Runners </div>
     <div id="x"></div>
   </div>
 </div>
 
 <script>
-// === PASSWORD AKSES ===
-const PASS = "ARJ90K";
-if (localStorage.getItem('access') !== 'granted') {
-  const input = prompt("Masukkan password akses:");
-  if (input !== PASS) {
-    document.body.innerHTML = "<h1 style='text-align:center;margin-top:50px;color:red'>Akses Ditolak!</h1>";
-    throw new Error("Wrong password");
-  }
-  localStorage.setItem('access', 'granted');
-}
-
-// === KALKULATOR ===
 const d=[10.7,22.5,14.9,14.3,14.6,13],n=["Pelari 1","Pelari 2","Pelari 3","Pelari 4","Pelari 5","Pelari 6"];
 const b=document.getElementById("r");
 n.forEach((t,i)=>{const e=document.createElement("div");e.style.marginBottom="1rem";e.innerHTML=`<label>${t} - Leg ${i+1} (${d[i]} km)</label><input id="p${i}" placeholder="5:30" class="pi" inputmode="numeric" style="display:inline-block;width:48%;margin-right:4%"><input type="text" value="menit:detik/km" disabled style="display:inline-block;width:48%;background:#f3f4f6;font-size:.9rem">`;b.appendChild(e);});
@@ -71,5 +59,6 @@ function T(t){const e=t%(24*60),i=Math.floor(e/60).toString().padStart(2,'0'),a=
 function D(t){const e=Math.floor(t/60),i=Math.floor(t%60);return e>0?`${e}j ${i}m`:`${i} menit`}
 document.querySelectorAll('.pi').forEach(t=>{t.addEventListener('input',e=>{let i=e.target.value.replace(/\D/g,'');if(i.length>4)i=i.slice(0,4);if(i.length>=3)i=i.slice(0,i.length-2)+':'+i.slice(-2);e.target.value=i;});});
 </script>
+
 </body>
 </html>
