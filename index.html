@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ultra Run 90K Calculator</title>
+  <style>
+    :root{--p:#2563eb;--s:#10b981;--g:#6b7280;--d:#ef4444}
+    body{font-family:Segoe UI,sans-serif;background:#f3f4f6;margin:0;padding:20px;color:#1f2937}
+    .c{max-width:900px;margin:auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);overflow:hidden}
+    header{background:var(--p);color:#fff;padding:1.5rem;text-align:center}
+    h1{margin:0;font-size:1.8rem}
+    .i{font-size:.9rem;opacity:.9;margin-top:.5rem}
+    .n{padding:2rem}
+    .g{margin-bottom:1rem}
+    label{display:block;margin-bottom:.5rem;font-weight:600;color:var(--g)}
+    input{width:100%;padding:.75rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem}
+    input.e{border-color:var(--d)}
+    button{background:var(--p);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:8px;font-size:1rem;cursor:pointer;margin-top:1rem;width:100%}
+    button:hover{background:#1d4ed8}
+    table{width:100%;border-collapse:collapse;margin-top:1.5rem;font-size:.95rem}
+    th{background:#f8fafc;padding:1rem;text-align:left;border-bottom:2px solid #e5e7eb;color:var(--g)}
+    td{padding:1rem;border-bottom:1px solid #e5e7eb}
+    tr:hover{background:#f8fafc}
+    .h{font-weight:bold;color:var(--s)}
+    .t{background:#ecfdf5;font-weight:bold}
+    .o{font-size:.85rem;color:var(--g);margin-top:1rem}
+    kbd{background:#1f2937;color:#fff;padding:2px 6px;border-radius:4px;font-size:.8rem}
+    @media(max-width:600px){.n{padding:1rem}td,th{padding:.5rem}}
+  </style>
+</head>
+<body>
+<div class="c">
+  <header><h1>Ultra Run 90K Calculator</h1><div class="i">by ARJ (21Runners Qatar)</div></header>
+  <div class="n">
+    <div class="g"><label>Waktu Mulai (HH:MM)</label><input id="s" value="05:00"></div>
+    <div class="g"><label>Pelari & Pace (mm:ss)</label><div id="r"></div></div>
+    <button onclick="_()">Hitung Estimasi Waktu</button>
+    <div class="o">Contoh: <code>5:30</code></div>
+    <div class="o" style="color:#dc2626;font-weight:600">Password lihat kode: tanya ARJ</div>
+    <div id="x"></div>
+  </div>
+</div>
+
+<script>
+// === PASSWORD AKSES ===
+const PASS = "ARJ90K";
+if (localStorage.getItem('access') !== 'granted') {
+  const input = prompt("Masukkan password akses:");
+  if (input !== PASS) {
+    document.body.innerHTML = "<h1 style='text-align:center;margin-top:50px;color:red'>Akses Ditolak!</h1>";
+    throw new Error("Wrong password");
+  }
+  localStorage.setItem('access', 'granted');
+}
+
+// === KALKULATOR ===
+const d=[10.7,22.5,14.9,14.3,14.6,13],n=["Pelari 1","Pelari 2","Pelari 3","Pelari 4","Pelari 5","Pelari 6"];
+const b=document.getElementById("r");
+n.forEach((t,i)=>{const e=document.createElement("div");e.style.marginBottom="1rem";e.innerHTML=`<label>${t} - Leg ${i+1} (${d[i]} km)</label><input id="p${i}" placeholder="5:30" class="pi" inputmode="numeric" style="display:inline-block;width:48%;margin-right:4%"><input type="text" value="menit:detik/km" disabled style="display:inline-block;width:48%;background:#f3f4f6;font-size:.9rem">`;b.appendChild(e);});
+
+function _(t){const e=t.trim().match(/^(\d+):(\d{2})$/);if(!e)return null;const i=parseInt(e[1],10),a=parseInt(e[2],10);return a>=60||i<0?null:i+a/60;}
+function _(){document.querySelectorAll('.pi').forEach(t=>t.classList.remove('e'));const t=document.getElementById("s").value.trim();if(!/^(\d{1,2}):(\d{2})$/.test(t)){alert("Format HH:MM salah");return;}
+const[o,s]=t.split(":").map(Number);let l=o*60+s,u=`<table><tr><th>Pelari</th><th>Jarak</th><th>Pace</th><th>Durasi</th><th>Mulai</th><th>Selesai</th></tr>`,m=0,f=true;
+for(let i=0;i<6;i++){const t=document.getElementById(`p${i}`).value.trim(),e=_(t);if(!e){document.getElementById(`p${i}`).classList.add('e');f=false;continue;}
+const a=d[i],g=e*a;m+=g;const p=l,h=p+g;u+=`<tr><td>${n[i]}</td><td>${a} km</td><td>${t}/km</td><td>${D(g)}</td><td>${T(p)}</td><td class="h">${T(h)}</td></tr>`;l=h;}
+if(!f){alert("Pace salah!");return;}
+const i=Math.floor(m/60),a=Math.round(m%60),g=T(o*60+s+m);u+=`<tr class="t"><td colspan="3"><strong>Total: ${d.reduce((t,e)=>t+e,0)} km</strong></td><td><strong>${i}j ${a}m</strong></td><td colspan="2"><strong>Selesai: ${g}</strong></td></tr></table>`;
+document.getElementById("x").innerHTML=u;}
+function T(t){const e=t%(24*60),i=Math.floor(e/60).toString().padStart(2,'0'),a=Math.floor(e%60).toString().padStart(2,'0');return`${i}:${a}`}
+function D(t){const e=Math.floor(t/60),i=Math.floor(t%60);return e>0?`${e}j ${i}m`:`${i} menit`}
+document.querySelectorAll('.pi').forEach(t=>{t.addEventListener('input',e=>{let i=e.target.value.replace(/\D/g,'');if(i.length>4)i=i.slice(0,4);if(i.length>=3)i=i.slice(0,i.length-2)+':'+i.slice(-2);e.target.value=i;});});
+</script>
+</body>
+</html>
