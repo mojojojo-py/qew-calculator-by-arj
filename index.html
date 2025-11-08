@@ -6,7 +6,7 @@
   <title>90K Ultra Run Calculator</title>
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <style>
-    :root{--p:#2563eb;--s:#10b981;--g:#6b7280;--d:#ef4444}
+    :root{--p:#2563eb;--s:#10b981;--g:#6b7280;--d:#ef4444;--cot-ok:#10b981;--cot-fail:#ef4444}
     body{font-family:Segoe UI,sans-serif;background:#f3f4f6;margin:0;padding:20px;color:#1f2937}
     .c{max-width:900px;margin:auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);overflow:hidden;position:relative}
     header{background:var(--p);color:#fff;padding:1.5rem;text-align:center;position:relative}
@@ -25,7 +25,9 @@
     th{background:#f8fafc;padding:.8rem;text-align:left;border-bottom:2px solid #e5e7eb;color:var(--g);font-weight:600}
     td{padding:.8rem;border-bottom:1px solid #e5e7eb;font-size:0.95rem}
     tr:hover{background:#f9fafb}
-    .h{font-weight:bold;color:var(--s)}
+    .h{font-weight:bold}
+    .cot-ok{color:var(--cot-ok)}
+    .cot-fail{color:var(--cot-fail);font-weight:bold}
     .t{background:#ecfdf5;font-weight:bold}
     .total-left{text-align:left}
     .total-center{text-align:center}
@@ -47,7 +49,6 @@
     .team-name{color:var(--p);font-size:1.25rem;font-weight:700}
     .by-arj{font-size:0.9rem;color:#4b5563;text-align:right;line-height:1.3}
 
-    /* CAPTURE AREA */
     #capture-area{
       padding:15px;
       background:#fff;
@@ -118,8 +119,8 @@
     <div class="o" data-ina="Contoh: 5:30" data-eng="Example: 5:30">
       Contoh: 5:30
     </div>
-    <div class="o" style="color:#dc2626;font-weight:600" data-ina="Kode: oleh ARJ" data-eng="Code: by ARJ">
-      Kode: oleh ARJ
+    <div class="o" style="color:#dc2626;font-weight:600" data-ina="Cut Off Time: Leg 3 @13:00 & Leg 6 @19:00" data-eng="Cut Off Time: Leg 3 @13:00 & Leg 6 @19:00">
+      COT: Leg 3 @13:00 & Leg 6 @19:00
     </div>
 
     <div id="result-container" style="margin-top:20px"></div>
@@ -132,6 +133,10 @@ const distances = [10.7, 22.5, 14.9, 14.3, 14.6, 13];
 const runnersINA = ["Pelari 1", "Pelari 2", "Pelari 3", "Pelari 4", "Pelari 5", "Pelari 6"];
 const runnersENG = ["Runner 1", "Runner 2", "Runner 3", "Runner 4", "Runner 5", "Runner 6"];
 let currentLang = 'ina';
+
+// COT (Cut Off Time)
+const COT1_MINUTES = 8 * 60;   // 13:00 = 8 jam dari 05:00
+const COT2_MINUTES = 14 * 60;  // 19:00 = 14 jam dari 05:00
 
 // === INIT PELARI ===
 function initRunners() {
@@ -185,7 +190,8 @@ function calculate() {
 
   const teamName = document.getElementById("teamName").value.trim() || (currentLang === 'ina' ? 'Tim' : 'Team');
   const [sh, sm] = startInput.split(":").map(Number);
-  let currentMinutes = sh * 60 + sm;
+  const startMinutes = sh * 60 + sm;
+  let currentMinutes = startMinutes;
 
   let html = `<div class="result-header">
     <div class="team-name">${teamName}</div>
@@ -204,6 +210,8 @@ function calculate() {
   let totalMinutes = 0;
   let totalPaceMinutes = 0;
   let valid = true;
+  let leg3Finish = 0;
+  let finalFinish = 0;
 
   for (let i = 0; i < 6; i++) {
     const paceInput = document.getElementById(`p${i}`).value.trim();
@@ -213,13 +221,19 @@ function calculate() {
     totalMinutes += duration;
     totalPaceMinutes += pace * dist;
     const start = currentMinutes, finish = start + duration;
+
+    if (i === 2) leg3Finish = finish; // Selesai Leg 3
+    if (i === 5) finalFinish = finish; // Selesai Leg 6
+
+    const finishClass = (i === 2 && finish > startMinutes + COT1_MINUTES) || (i === 5 && finish > startMinutes + COT2_MINUTES) ? 'cot-fail' : 'h';
+
     html += `<tr>
       <td>${currentLang==='ina'?runnersINA[i]:runnersENG[i]}</td>
       <td>${dist} km</td>
       <td>${paceInput}/km</td>
       <td>${formatDuration(duration)}</td>
       <td>${formatTime(start)}</td>
-      <td class="h">${formatTime(finish)}</td>
+      <td class="${finishClass}">${formatTime(finish)}</td>
     </tr>`;
     currentMinutes = finish;
   }
@@ -227,17 +241,21 @@ function calculate() {
   if (!valid) { alert(currentLang === 'ina' ? "Pace salah!" : "Invalid pace!"); return; }
 
   const totalHours = Math.floor(totalMinutes / 60), totalMins = Math.round(totalMinutes % 60);
-  const finalTime = formatTime(sh * 60 + sm + totalMinutes);
+  const finalTime = formatTime(startMinutes + totalMinutes);
   const hourLabel = currentLang === 'ina' ? 'j' : 'h';
 
   const avgPace = totalPaceMinutes / 90;
   const avgPaceStr = formatPace(avgPace) + '/km';
 
+  const cot1OK = leg3Finish <= startMinutes + COT1_MINUTES;
+  const cot2OK = finalFinish <= startMinutes + COT2_MINUTES;
+  const finishClass = cot1OK && cot2OK ? 'cot-ok' : 'cot-fail';
+
   html += `<tr class="t">
     <td colspan="2" class="total-left"><strong>Total: 90 km</strong></td>
 	<td class="total-center"><strong>${avgPaceStr}</strong></td>
-    <td class="total-center"><strong>${totalHours}${hourLabel} ${totalMins}m</strong></td>
-    <td colspan="2" class="total-right"><strong>${currentLang==='ina'?'Selesai':'Finish'}: ${finalTime}</strong></td>
+    <td class="total-center"><strong>${totalHours}${hourLabel} ${totalMins}m</strong></td>    
+    <td colspan="2" class="total-right"><strong><span class="${finishClass}">${currentLang==='ina'?'Selesai':'Finish'}: ${finalTime}</span></strong></td>
   </tr></table>`;
 
   const container = document.getElementById("result-container");
@@ -266,18 +284,15 @@ function formatDuration(m) {
   return h > 0 ? `${h}${hourLabel} ${min}m` : `${min} ${minLabel}`;
 }
 
-// === SHARE: FULL CAPTURE PAKSA LEBAR ===
+// === SHARE: FULL CAPTURE ===
 function shareResult() {
   const area = document.getElementById("capture-area");
-  
-  // PAKSA LEBAR MINIMAL
   const originalOverflow = area.style.overflow;
   const originalWidth = area.style.width;
   area.style.overflow = 'visible';
   area.style.width = 'fit-content';
   area.style.minWidth = '700px';
 
-  // TUNGGU RENDER
   setTimeout(() => {
     html2canvas(area, {
       scale: 2,
@@ -300,8 +315,6 @@ function shareResult() {
           navigator.share({ files: [file], title: 'QEW 90K Result', text: 'Hasil Ultra Run 90K' }).catch(() => {});
         }
       }, 'image/png', 0.9);
-      
-      // KEMBALIKAN STYLE
       area.style.overflow = originalOverflow;
       area.style.width = originalWidth;
     });
